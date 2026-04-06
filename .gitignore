@@ -1,0 +1,32 @@
+# ============================================================
+# AURA — Git Ignore Rules
+# ============================================================
+
+# Environment variables — NEVER push API keys to GitHub
+.ENV
+.env
+*.env
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Database — each user gets their own local DB
+aura_data/
+
+# IDE / Editor files
+.idea/
+.cursor/
+.vscode/
+
+# macOS system files
+.DS_Store
+
+# Streamlit cache
+.streamlit/secrets.toml

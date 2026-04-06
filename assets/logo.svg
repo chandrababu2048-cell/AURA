@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400">
+  <defs>
+    <!-- Amber radial glow for the orb core -->
+    <radialGradient id="coreGlow" cx="42%" cy="38%" r="60%">
+      <stop offset="0%"   stop-color="#FFD060" stop-opacity="0.9"/>
+      <stop offset="50%"  stop-color="#FFB000" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FF6600" stop-opacity="0.1"/>
+    </radialGradient>
+
+    <!-- Outer dark background for the emblem circle -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#1a0800"/>
+      <stop offset="100%" stop-color="#080300"/>
+    </radialGradient>
+
+    <!-- Glow filter applied to key elements -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="strongGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ── Background Circle ── -->
+  <circle cx="200" cy="200" r="195" fill="url(#bgGrad)" stroke="#FFB000" stroke-width="1" stroke-opacity="0.3"/>
+
+  <!-- ── Outer Dashed Ring ── -->
+  <circle cx="200" cy="200" r="178"
+          fill="none"
+          stroke="#FFB000" stroke-width="0.8"
+          stroke-opacity="0.2"
+          stroke-dasharray="4 6"/>
+
+  <!-- ── Concentric Rings (like the reference image) ── -->
+  <circle cx="200" cy="200" r="160" fill="none" stroke="#FFB000" stroke-width="0.6" stroke-opacity="0.12"/>
+  <circle cx="200" cy="200" r="145" fill="none" stroke="#FFB000" stroke-width="0.8" stroke-opacity="0.18"/>
+  <circle cx="200" cy="200" r="128" fill="none" stroke="#FFB000" stroke-width="1"   stroke-opacity="0.25"/>
+  <circle cx="200" cy="200" r="110" fill="none" stroke="#FFB000" stroke-width="1.2" stroke-opacity="0.35"/>
+
+  <!-- ── Tick Marks on 128px Ring (mechanical feel) ── -->
+  <g stroke="#FFB000" stroke-width="1.5" stroke-opacity="0.4" filter="url(#glow)">
+    <!-- 12 ticks at 30° intervals -->
+    <line x1="200" y1="72"  x2="200" y2="84"/>
+    <line x1="264" y1="90"  x2="258" y2="100"/>
+    <line x1="310" y1="136" x2="300" y2="142"/>
+    <line x1="328" y1="200" x2="316" y2="200"/>
+    <line x1="310" y1="264" x2="300" y2="258"/>
+    <line x1="264" y1="310" x2="258" y2="300"/>
+    <line x1="200" y1="328" x2="200" y2="316"/>
+    <line x1="136" y1="310" x2="142" y2="300"/>
+    <line x1="90"  y1="264" x2="100" y2="258"/>
+    <line x1="72"  y1="200" x2="84"  y2="200"/>
+    <line x1="90"  y1="136" x2="100" y2="142"/>
+    <line x1="136" y1="90"  x2="142" y2="100"/>
+  </g>
+
+  <!-- ── Core Sphere ── -->
+  <circle cx="200" cy="200" r="72" fill="url(#coreGlow)" stroke="#FFB000" stroke-width="1.5" filter="url(#glow)"/>
+
+  <!-- Geodesic latitude lines inside sphere -->
+  <ellipse cx="200" cy="200" rx="72" ry="18" fill="none" stroke="#FFB000" stroke-width="0.6" stroke-opacity="0.5"/>
+  <ellipse cx="200" cy="200" rx="72" ry="40" fill="none" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.4"/>
+  <ellipse cx="200" cy="200" rx="72" ry="62" fill="none" stroke="#FFB000" stroke-width="0.4" stroke-opacity="0.3"/>
+
+  <!-- Geodesic longitude lines inside sphere -->
+  <ellipse cx="200" cy="200" rx="18" ry="72" fill="none" stroke="#FFB000" stroke-width="0.6" stroke-opacity="0.5"/>
+  <ellipse cx="200" cy="200" rx="40" ry="72" fill="none" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.4"/>
+  <ellipse cx="200" cy="200" rx="62" ry="72" fill="none" stroke="#FFB000" stroke-width="0.4" stroke-opacity="0.3"/>
+
+  <!-- Geodesic triangle lines -->
+  <line x1="200" y1="128" x2="138" y2="236" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.3"/>
+  <line x1="200" y1="128" x2="262" y2="236" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.3"/>
+  <line x1="138" y1="236" x2="262" y2="236" stroke="#FFB000" stroke-width="0.5" stroke-opacity="0.3"/>
+  <line x1="200" y1="272" x2="200" y2="128" stroke="#FFB000" stroke-width="0.4" stroke-opacity="0.2"/>
+  <line x1="128" y1="200" x2="272" y2="200" stroke="#FFB000" stroke-width="0.4" stroke-opacity="0.2"/>
+
+  <!-- Core center glow dot -->
+  <circle cx="200" cy="200" r="10" fill="#FFD060" filter="url(#strongGlow)"/>
+  <circle cx="200" cy="200" r="4"  fill="#FFFFFF"/>
+
+  <!-- ── A.U.R.A Text ── -->
+  <text x="200" y="338"
+        font-family="'Courier New', monospace"
+        font-size="32"
+        font-weight="bold"
+        letter-spacing="14"
+        fill="#FFB000"
+        text-anchor="middle"
+        filter="url(#glow)">A.U.R.A</text>
+
+  <!-- ── Tagline ── -->
+  <text x="200" y="360"
+        font-family="'Courier New', monospace"
+        font-size="9"
+        letter-spacing="5"
+        fill="#FFB000"
+        fill-opacity="0.45"
+        text-anchor="middle">PERSONAL AI COMPANION</text>
+
+  <!-- ── Corner decorations (retro terminal feel) ── -->
+  <text x="18"  y="32"  font-family="monospace" font-size="11" fill="#FFB000" fill-opacity="0.25">╔══</text>
+  <text x="355" y="32"  font-family="monospace" font-size="11" fill="#FFB000" fill-opacity="0.25">══╗</text>
+  <text x="18"  y="390" font-family="monospace" font-size="11" fill="#FFB000" fill-opacity="0.25">╚══</text>
+  <text x="355" y="390" font-family="monospace" font-size="11" fill="#FFB000" fill-opacity="0.25">══╝</text>
+</svg>

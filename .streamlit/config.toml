@@ -1,0 +1,28 @@
+# ============================================================
+# .streamlit/config.toml — Streamlit App Configuration
+# ============================================================
+# This file controls how Streamlit behaves when you run the app.
+# Committed to GitHub — safe to share (no secrets here).
+# ============================================================
+
+[server]
+# Allow external connections (required for sharing / deployment)
+headless = true
+
+# Port the app runs on locally
+port = 8501
+
+[browser]
+# Don't auto-open browser tab on startup
+serverAddress = "localhost"
+gatherUsageStats = false
+
+[theme]
+# Dark theme base — we override most of this with custom CSS,
+# but setting base="dark" prevents Streamlit's light-mode flash
+# on initial load.
+base = "dark"
+backgroundColor      = "#080300"
+secondaryBackgroundColor = "#0c0400"
+textColor            = "#FFB000"
+font                 = "monospace"

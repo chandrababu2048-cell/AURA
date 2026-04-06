@@ -1,0 +1,26 @@
+# ============================================================
+# AURA v1 — Python Dependencies
+# ============================================================
+# Install with: pip install -r requirements.txt
+# ============================================================
+
+# Anthropic Claude API — powers AURA's AI brain
+anthropic>=0.40.0
+
+# Environment variable management — reads .ENV file
+python-dotenv>=1.0.0
+
+# HTTP requests — used by weather.py to call OpenWeatherMap
+requests>=2.31.0
+
+# Password hashing — secures user accounts (never store plain passwords)
+bcrypt>=4.1.0
+
+# Web framework — the entire AURA UI is built with this
+streamlit>=1.40.0
+
+# System metrics — real CPU, RAM, disk stats for the dashboard
+psutil>=5.9.0
+
+# Data analytics — used by weekly report (pandas DataFrames)
+pandas>=2.0.0
