@@ -34,23 +34,6 @@ from memory import AuraMemory
 
 load_dotenv()
 
-class AuraBrain:
-    def __init__(self, user_id: int):
-        self.user_id = user_id
-
-        # Read API key fresh at init time (not at import time).
-        # On Streamlit Cloud secrets are in st.secrets.
-        # Locally they come from .env via os.environ.
-        try:
-            import streamlit as st
-            api_key = st.secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
-        except Exception:
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
-
-        self.client = Anthropic(api_key=api_key)
-        self.memory = AuraMemory(user_id)
-        self.conversation_history: list[dict] = []
-
 
 # Mode tone instructions injected into the system prompt.
 # Changing the mode changes AURA's entire personality.
@@ -92,7 +75,16 @@ class AuraBrain:
         """
         self.user_id  = user_id
         self.memory   = AuraMemory(user_id)
-        self.client   = Anthropic(api_key=api_key)
+
+        # Read API key at init time so st.secrets is available.
+        # Streamlit Cloud uses st.secrets; local dev uses .env.
+        try:
+            import streamlit as st
+            _key = st.secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+        except Exception:
+            _key = os.environ.get("ANTHROPIC_API_KEY")
+
+        self.client   = Anthropic(api_key=_key)
 
         # conversation_history mirrors Claude's messages format:
         # [{"role": "user"|"assistant", "content": "..."}]
