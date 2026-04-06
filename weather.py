@@ -54,8 +54,13 @@ def get_weather(city: str = None) -> dict:
     # Resolve city: argument → env var → hardcoded default (Boston)
     target_city = city or os.environ.get("WEATHER_CITY", "Boston")
 
-    # API key lives in .ENV, never hardcoded in source
-    api_key = os.environ.get("OPENWEATHER_API_KEY")
+    # API key: check Streamlit secrets first (for Cloud), then env var (local)
+    try:
+        import streamlit as st
+        api_key = st.secrets.get("OPENWEATHER_API_KEY") or os.environ.get("OPENWEATHER_API_KEY")
+        target_city = st.secrets.get("WEATHER_CITY") or city or os.environ.get("WEATHER_CITY", "Boston")
+    except Exception:
+        api_key = os.environ.get("OPENWEATHER_API_KEY")
 
     if not api_key:
         return {

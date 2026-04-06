@@ -33,7 +33,16 @@ from anthropic import Anthropic
 from memory import AuraMemory
 
 load_dotenv()
-api_key = os.environ.get("ANTHROPIC_API_KEY")
+# On Streamlit Cloud, secrets are in st.secrets (not .env).
+# Fall back to env var for local dev.
+def _get_api_key() -> str:
+    try:
+        import streamlit as st
+        return st.secrets.get("ANTHROPIC_API_KEY") or os.environ.get("ANTHROPIC_API_KEY")
+    except Exception:
+        return os.environ.get("ANTHROPIC_API_KEY")
+
+api_key = _get_api_key()
 
 class AuraBrain:
     def __init__(self, user_id: int):

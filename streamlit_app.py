@@ -325,42 +325,8 @@ div[data-testid="stColumn"]:first-child > div > div[data-testid="stVerticalBlock
     100% { background-position:0 100vh; }
 }
 
-/* ── Fixed dashboard — no page scroll ── */
-html, body {
-    overflow:hidden !important;
-    height:100% !important;
-}
-.stApp {
-    overflow:hidden !important;
-    height:100vh !important;
-}
-.stMain {
-    overflow:hidden !important;
-    height:calc(100vh - 46px) !important;
-}
-.stMainBlockContainer, .block-container {
-    overflow:hidden !important;
-    padding:0 !important;
-    max-width:100% !important;
-}
-
-/* ── Column layout: prevent stretching ── */
-[data-testid="stHorizontalBlock"] {
-    align-items:flex-start !important;
-    height:calc(100vh - 46px) !important;
-    overflow:hidden !important;
-}
-
-/* ── Left column: scrolls internally ── */
-div[data-testid="stColumn"]:nth-child(1) {
-    padding:8px 8px 8px 14px !important;
-    overflow-y:auto !important;
-    height:calc(100vh - 46px) !important;
-    max-height:calc(100vh - 46px) !important;
-    background:#050200 !important;
-    border-right:1px solid rgba(255,176,0,0.15) !important;
-    flex-shrink:0 !important;
-}
+/* ── Column layout + left scroll: chat page only (injected inline) ── */
+/* Moved to chat-page inline CSS so auth/boot pages are not affected */
 
 /* ── Center column: fixed, no scroll ── */
 div[data-testid="stColumn"]:nth-child(2) {
@@ -687,6 +653,44 @@ if st.session_state.page == "auth":
 #   Everything interactive uses Streamlit widgets.
 
 if st.session_state.page == "chat":
+
+    # Lock scroll only on the chat dashboard (not auth/boot pages)
+    st.markdown("""<style>
+    html, body { overflow:hidden !important; height:100% !important; }
+    .stApp { overflow:hidden !important; height:100vh !important; }
+    .stMain { overflow:hidden !important; height:calc(100vh - 46px) !important; }
+    .stMainBlockContainer, .block-container {
+        overflow:hidden !important; padding:0 !important; max-width:100% !important; }
+
+    /* ── Column layout: chat page only ── */
+    [data-testid="stHorizontalBlock"] {
+        align-items:flex-start !important;
+        height:calc(100vh - 46px) !important;
+        overflow:hidden !important;
+    }
+
+    /* ── Left column: scrolls internally ── */
+    div[data-testid="stColumn"]:nth-child(1) {
+        padding:8px 8px 8px 14px !important;
+        overflow-y:auto !important;
+        height:calc(100vh - 46px) !important;
+        max-height:calc(100vh - 46px) !important;
+        background:#050200 !important;
+        border-right:1px solid rgba(255,176,0,0.15) !important;
+        flex-shrink:0 !important;
+    }
+    /* Fix: Streamlit wraps column content in an intermediate div —
+       that wrapper must pass full height through for scroll to work */
+    div[data-testid="stColumn"]:nth-child(1) > div {
+        height:100% !important;
+        overflow-y:auto !important;
+        overflow-x:hidden !important;
+    }
+    div[data-testid="stColumn"]:nth-child(1) > div > div[data-testid="stVerticalBlock"] {
+        height:auto !important;
+        padding-bottom:24px !important;
+    }
+    </style>""", unsafe_allow_html=True)
 
     # Safety guards
     if st.session_state.brain is None and st.session_state.user_id:
@@ -1254,7 +1258,7 @@ function frame() {
 frame();
 </script>
 </body></html>
-        """, height=350, scrolling=False)
+        """, height=380, scrolling=False)
 
         # ── Mode Switcher ─────────────────────────────────────
         # REAL Streamlit buttons — these actually work.
