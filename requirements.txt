@@ -17,6 +17,9 @@ uvicorn>=0.30.0
 # HTTP requests — used by weather.py to call OpenWeatherMap
 requests>=2.31.0
 
+# Async-capable HTTP client — used by brain.py for news + web search tools
+httpx>=0.27.0
+
 # Password hashing — secures user accounts (never store plain passwords)
 bcrypt>=4.1.0
 
