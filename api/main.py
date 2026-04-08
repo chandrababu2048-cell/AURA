@@ -41,6 +41,7 @@ from brain import AuraBrain
 from database import AuraDatabase
 from core.memory import AuraMemory
 from weather import get_weather
+from agents.system_agent import SystemAgent
 
 load_dotenv()
 
@@ -207,6 +208,12 @@ class WeatherResponse(BaseModel):
     wind:       Optional[float] = None
     summary:    str
     error:      Optional[str]   = None
+
+
+class NewsResponse(BaseModel):
+    status:     str
+    confidence: float
+    data:       str
 
 
 # ============================================================
@@ -475,3 +482,13 @@ def weather(
     """
     data = get_weather(city)
     return WeatherResponse(**data)
+
+# ── News ───────────────────────────────────────────────────
+
+@app.get("/news", response_model=NewsResponse, tags=["news"])
+def news() -> NewsResponse:
+    """
+    Fetch current live global headlines via SystemAgent.
+    """
+    handshake = SystemAgent.get_news()
+    return NewsResponse(**handshake)

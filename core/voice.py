@@ -102,12 +102,20 @@ class AuraVoice:
         transcribes with Google Speech Recognition.
         Returns the recognised text, or None if nothing was heard.
         """
+        # Find MacBook mic explicitly — avoids iPhone/Bluetooth being picked
+        mic = None
+        for i, d in enumerate(sd.query_devices()):
+            if d["max_input_channels"] > 0 and "MacBook" in d["name"]:
+                mic = i
+                break
+
         print("\n  [ Listening... speak now ]")
         recording = sd.rec(
             int(MAX_LISTEN_SEC * SAMPLE_RATE),
             samplerate=SAMPLE_RATE,
             channels=1,
-            dtype="int16"
+            dtype="int16",
+            device=mic,
         )
         sd.wait()
         print("  [ Got it — processing... ]")

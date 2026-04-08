@@ -28,11 +28,13 @@
 # ============================================================
 
 import os
-import httpx                        # HTTP client — used for news + web search
-import xml.etree.ElementTree as ET  # XML parser — RSS feeds are XML format
+import httpx                        # HTTP client
+import json
 from dotenv import load_dotenv
 from anthropic import Anthropic
 from core.memory import AuraMemory
+from core.helper import SystemExecutive
+from agents.system_agent import SystemAgent
 
 load_dotenv()
 
@@ -133,17 +135,20 @@ TOOLS = [
             "required": ["query"]   # Claude MUST provide a query to call this tool
         },
     },
+    {
+        "name": "open_live_news",
+        "description": "Physically open the MacBook browser to a live news website.",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        "name": "open_weather_map",
+        "description": "Physically open the MacBook browser to a live weather satellite map.",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
 ]
 
 
-# ── RSS Feed URLs for get_news ────────────────────────────
-# We pull headlines from these two sources.
-# RSS = Really Simple Syndication — a standard XML format for news feeds.
-# No API key needed — these are public feeds.
-NEWS_FEEDS = [
-    "https://feeds.bbci.co.uk/news/world/rss.xml",   # BBC World
-    "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",  # NYT World
-]
+# (RSS logic moved to agents/system_agent.py)
 
 
 class AuraBrain:
@@ -263,84 +268,29 @@ WEATHER:
         """
 
         if name == "get_weather":
-            # weather.py already exists — we just call it
-            try:
-                from weather import get_weather
-                data = get_weather()
-                # data["summary"] is a human-readable string like "28°C, partly cloudy"
-                return data["summary"] if data["success"] else "Weather data unavailable right now."
-            except Exception as e:
-                return f"Weather tool failed: {e}"
+            handshake = SystemAgent.get_weather()
+            return str(handshake["data"]) if handshake["status"] == "complete" else f"Weather tool failed: {handshake['data']}"
 
         elif name == "get_today_plans":
-            # AuraMemory.get_today_schedule() already formats this as readable text
-            # It returns something like:
-            # "Today (2026-04-08) — Plans:
-            #   1. ⏳ Study for exam
-            #   2. ✅ Morning run"
             return self.memory.get_today_schedule()
 
         elif name == "get_news":
-            # We fetch this ourselves — see _fetch_news() below
-            return self._fetch_news()
+            handshake = SystemAgent.get_news()
+            return str(handshake["data"]) if handshake["status"] == "complete" else f"News tool failed: {handshake['data']}"
 
         elif name == "search_web":
-            # inputs["query"] is the search term Claude decided to look up
             query = inputs.get("query", "")
             return self._search_web(query)
+            
+        elif name == "open_live_news":
+            return SystemExecutive.open_live_news()
+            
+        elif name == "open_weather_map":
+            return SystemExecutive.open_weather_map()
 
-        # If Claude somehow requests a tool that doesn't exist
         return f"Tool '{name}' not found."
 
-    def _fetch_news(self) -> str:
-        """
-        Fetch top headlines from BBC and NYT via their RSS feeds.
 
-        RSS feeds are XML files that news sites publish publicly.
-        We parse them, grab the titles, and return a plain text list.
-        No API key needed.
-
-        Returns:
-            A string of headlines, or an error message.
-        """
-        headlines = []
-
-        for url in NEWS_FEEDS:
-            try:
-                # httpx.get() makes an HTTP request to the RSS URL
-                # timeout=5 means give up after 5 seconds — don't hang forever
-                # headers = we pretend to be a browser so sites don't block us
-                response = httpx.get(
-                    url,
-                    timeout=5,
-                    headers={"User-Agent": "AURA/1.0"},
-                    follow_redirects=True,
-                )
-
-                # response.content is the raw XML bytes
-                # ET.fromstring() parses XML into a tree we can navigate
-                root = ET.fromstring(response.content)
-
-                # RSS format: headlines are inside <item> tags
-                # findall(".//item") finds ALL <item> tags anywhere in the XML
-                # [:3] = only take the first 3 from each feed (6 total max)
-                items = root.findall(".//item")[:3]
-
-                for item in items:
-                    # findtext("title") gets the text inside the <title> tag
-                    title = item.findtext("title")
-                    if title:
-                        headlines.append(title.strip())
-
-            except Exception:
-                # If one feed fails, skip it — don't crash everything
-                continue
-
-        if not headlines:
-            return "News feeds are unresponsive right now, Boss."
-
-        # Join all headlines into one string for Claude to read
-        return "Latest headlines:\n" + "\n".join(f"- {h}" for h in headlines)
 
     def _search_web(self, query: str) -> str:
         """
