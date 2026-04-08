@@ -18,7 +18,8 @@ import getpass
 from brain import AuraBrain
 from database import AuraDatabase
 from datetime import datetime
-from helper import get_greeting
+from core.helper import get_greeting
+from core.voice import AuraVoice
 
 
 def setup_aura() -> tuple[AuraBrain, dict]:
@@ -74,6 +75,8 @@ def setup_aura() -> tuple[AuraBrain, dict]:
     else:
         greeting = get_greeting(datetime.now().hour)
         print(f"\n{greeting}, {user['name']}! {user['ai_name']} is online.")
+        voice = AuraVoice()
+        voice.speak(f"{greeting}, {user['name']}. I'm online and ready.")
 
     brain = AuraBrain(user["id"])
     return brain, user
@@ -106,10 +109,12 @@ def chat_loop(brain: AuraBrain, user: dict):
     """
     ai_name   = user["ai_name"]
     user_name = user["name"]
+    voice     = AuraVoice()
 
     print("\n" + "=" * 50)
     print(f"  {ai_name} is listening.")
-    print("  Type 'plans' | 'add' | 'quit'")
+    print("  Press Enter to speak  |  or type normally")
+    print("  Commands: 'plans' | 'add' | 'quit'")
     print("=" * 50 + "\n")
 
     while True:
@@ -117,11 +122,17 @@ def chat_loop(brain: AuraBrain, user: dict):
             user_input = input(f"{user_name}: ").strip()
         except (KeyboardInterrupt, EOFError):
             # Graceful exit on Ctrl+C or Ctrl+D
-            print(f"\n\n{ai_name}: Goodbye! You did great today.")
+            farewell = f"Goodbye, {user_name}. Don't work too hard."
+            print(f"\n\n{ai_name}: {farewell}")
+            voice.speak(farewell)
             break
 
+        # Empty Enter → push to talk
         if not user_input:
-            continue
+            user_input = voice.listen() or ""
+            if not user_input:
+                continue
+            print(f"{user_name} (voice): {user_input}")
 
         if user_input.lower() == "quit":
             print(f"\n{ai_name}: Goodbye, {user_name}! You did great today.")
@@ -142,6 +153,7 @@ def chat_loop(brain: AuraBrain, user: dict):
         print(f"\n{ai_name}: ", end="", flush=True)
         reply = brain.think(user_input)
         print(f"{reply}\n")
+        voice.speak(reply)
 
 
 # ── Entry Point ────────────────────────────────────────────

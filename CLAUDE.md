@@ -31,3 +31,7 @@ AURA (Automated Unified Reasoning Assistant) is a proactive, Jarvis-style compan
 2. **Database Protocol:** Never use raw SQL strings; use SQLAlchemy or the Repository Pattern in `database.py`.
 3. **Communication:** Be proactive. If a change in the UI might break the Brain, alert Chandu immediately.
 
+## Working Directory
+ALWAYS work in: /Users/chandu/Desktop/AURA
+NEVER create copies in other locations
+NEVER work outside this folder

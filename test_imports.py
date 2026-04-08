@@ -1,7 +1,7 @@
-from helper import say_hello, get_greeting
-from helper import add_numbers
-from helper import add_numbers
-from helper import get_day_motivation
+from core.helper import say_hello, get_greeting
+from core.helper import add_numbers
+from core.helper import add_numbers
+from core.helper import get_day_motivation
 
 print(say_hello("Chandu"))
 print(add_numbers(5, 3))

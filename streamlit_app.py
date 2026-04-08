@@ -44,7 +44,7 @@ import html as html_lib
 from brain import AuraBrain
 from database import AuraDatabase
 from weather import get_weather
-from helper import get_greeting as _get_greeting
+from core.helper import get_greeting as _get_greeting
 
 # ── Page Config ──────────────────────────────────────────────
 # Must be the FIRST Streamlit call — Streamlit enforces this.

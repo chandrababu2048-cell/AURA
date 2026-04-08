@@ -28,3 +28,14 @@ psutil>=5.9.0
 
 # Data analytics — used by weekly report (pandas DataFrames)
 pandas>=2.0.0
+
+# Voice — TTS (offline, no API key required)
+pyttsx3>=2.90
+
+# Voice — STT (offline capable via Google/Sphinx)
+SpeechRecognition>=3.10.0
+
+# Voice — robotic effect processing
+scipy>=1.11.0
+sounddevice>=0.4.6
+soundfile>=0.12.1

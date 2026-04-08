@@ -30,7 +30,7 @@
 import os
 from dotenv import load_dotenv
 from anthropic import Anthropic
-from memory import AuraMemory
+from core.memory import AuraMemory
 
 load_dotenv()
 

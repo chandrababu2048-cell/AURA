@@ -39,7 +39,7 @@ from dotenv import load_dotenv
 
 from brain import AuraBrain
 from database import AuraDatabase
-from memory import AuraMemory
+from core.memory import AuraMemory
 from weather import get_weather
 
 load_dotenv()
