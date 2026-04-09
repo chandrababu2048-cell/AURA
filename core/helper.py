@@ -18,7 +18,32 @@
 # ============================================================
 
 import time
+import subprocess   # runs macOS terminal commands — used to open apps
 import webbrowser   # Python built-in — talks directly to macOS to open URLs
+
+# Common app name aliases — maps what you say to the actual macOS app name
+APP_ALIASES = {
+    "vs code":            "Visual Studio Code",
+    "vscode":             "Visual Studio Code",
+    "visual studio code": "Visual Studio Code",
+    "code":               "Visual Studio Code",
+    "pycharm":            "PyCharm",
+    "terminal":           "Terminal",
+    "chrome":             "Google Chrome",
+    "safari":             "Safari",
+    "spotify":            "Spotify",
+    "slack":              "Slack",
+    "notion":             "Notion",
+    "finder":             "Finder",
+    "notes":              "Notes",
+    "calendar":           "Calendar",
+    "mail":               "Mail",
+    "messages":           "Messages",
+    "whatsapp":           "WhatsApp",
+    "zoom":               "Zoom",
+    "figma":              "Figma",
+    "postman":            "Postman",
+}
 
 
 # ── Greeting Utilities ────────────────────────────────────
@@ -119,6 +144,38 @@ class SystemExecutive:
         # Al Jazeera English — 24/7 live stream, free, no login
         webbrowser.open("https://www.youtube.com/watch?v=F6sLTWKoq0s")
         return "Live news stream is open."
+
+    @staticmethod
+    def open_app(app_name: str) -> str:
+        """
+        Opens any macOS app by name.
+
+        `subprocess.run(["open", "-a", "App Name"])` is the macOS
+        command to open an application — same as double-clicking it.
+        "open -a" = open application by name from /Applications.
+        We check aliases first so "vs code" → "Visual Studio Code".
+        """
+        # Normalise — lowercase so "VS Code" and "vs code" both match
+        key = app_name.lower().strip()
+
+        # Look up alias, fall back to title-casing what was said
+        resolved = APP_ALIASES.get(key, app_name.title())
+
+        try:
+            # ["open", "-a", "Visual Studio Code"] = macOS open command
+            result = subprocess.run(
+                ["open", "-a", resolved],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            if result.returncode == 0:
+                return f"Opened {resolved}."
+            else:
+                # App not found — try opening as a file path or URL instead
+                return f"Couldn't find {resolved} in Applications. Is it installed?"
+        except Exception as e:
+            return f"Failed to open {resolved}: {e}"
 
     @staticmethod
     def open_url(url: str) -> str:

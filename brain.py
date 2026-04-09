@@ -161,6 +161,21 @@ TOOLS = [
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
+        # Open any macOS app by name
+        "name": "open_app",
+        "description": "Open any app on the Mac by name. Use when user says 'open VS Code', 'open Spotify', 'open Chrome', 'open terminal' etc.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "app_name": {
+                    "type": "string",
+                    "description": "The app name to open e.g. 'VS Code', 'Spotify', 'Chrome', 'Terminal'"
+                }
+            },
+            "required": ["app_name"]
+        }
+    },
+    {
         # Open any URL the user asks for
         "name": "open_url",
         "description": "Open any website or URL in the browser. Use when the user asks to open a specific site like GitHub, YouTube, Google, or any URL.",
@@ -323,6 +338,9 @@ WEATHER:
 
         elif name == "open_youtube_news":
             return SystemExecutive.open_youtube_news()
+
+        elif name == "open_app":
+            return SystemExecutive.open_app(inputs.get("app_name", ""))
 
         elif name == "open_url":
             return SystemExecutive.open_url(inputs.get("url", ""))
