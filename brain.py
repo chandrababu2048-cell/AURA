@@ -136,14 +136,44 @@ TOOLS = [
         },
     },
     {
-        "name": "open_live_news",
-        "description": "Physically open the MacBook browser to a live news website.",
+        # Opens worldmonitor.app + Bloomberg live side by side
+        # Triggered when user asks "what's happening in the world", "show me the map", "world briefing"
+        "name": "open_world_briefing",
+        "description": "Open the live world intelligence view — world map + Bloomberg live news side by side. Use when user asks what's happening in the world, wants a briefing, or asks to see the map.",
         "input_schema": {"type": "object", "properties": {}, "required": []}
     },
     {
-        "name": "open_weather_map",
-        "description": "Physically open the MacBook browser to a live weather satellite map.",
+        # BBC News — for general news requests without the full map
+        "name": "open_live_news",
+        "description": "Open BBC News live in the browser for breaking news and world events.",
         "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        # zoom.earth — live satellite weather map
+        "name": "open_weather_map",
+        "description": "Open a live satellite weather map in the browser. Use when user asks about weather visually or wants to see weather on screen.",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        # YouTube live news stream
+        "name": "open_youtube_news",
+        "description": "Open a live YouTube news stream. Use when user asks for live TV news or video news.",
+        "input_schema": {"type": "object", "properties": {}, "required": []}
+    },
+    {
+        # Open any URL the user asks for
+        "name": "open_url",
+        "description": "Open any website or URL in the browser. Use when the user asks to open a specific site like GitHub, YouTube, Google, or any URL.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The full URL or website name to open (e.g. github.com, youtube.com)"
+                }
+            },
+            "required": ["url"]
+        }
     },
 ]
 
@@ -282,11 +312,20 @@ WEATHER:
             query = inputs.get("query", "")
             return self._search_web(query)
             
+        elif name == "open_world_briefing":
+            return SystemExecutive.open_world_briefing()
+
         elif name == "open_live_news":
             return SystemExecutive.open_live_news()
-            
+
         elif name == "open_weather_map":
             return SystemExecutive.open_weather_map()
+
+        elif name == "open_youtube_news":
+            return SystemExecutive.open_youtube_news()
+
+        elif name == "open_url":
+            return SystemExecutive.open_url(inputs.get("url", ""))
 
         return f"Tool '{name}' not found."
 
