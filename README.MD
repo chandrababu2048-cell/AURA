@@ -233,7 +233,20 @@ python -m tests.test_all_systems
 ### Phase 4 — Hardware
 - [ ] Local LLM — data never leaves the machine
 - [ ] SQLCipher — encrypted database
-- [ ] Neural interface — biometric lock, one person forever
+
+### Phase 5 — Cognitive Drag Engine
+- [ ] `ingestor.py` — background monitor, tracks keypress intervals + window switches
+- [ ] `governor.py` — heuristic processor, outputs Cognitive Drag score [0.0 → 1.0]
+- [ ] `interface.py` — adaptive display, high/low density based on Cd score
+- [ ] Cognitive Consolidation Sleep Cycle — nightly memory replay while Boss sleeps, promotes important vault entries to permanent memory, prunes noise, extracts patterns, delivers a morning memory report on wake
+
+### Phase 6 — Unbreakable Identity
+- [ ] Zero-Trust Hyper-Personalized Security — continuous behavioral biometrics (vocal cadence, typing rhythm, phrasing patterns). Not a login gate — a living identity score. If the pattern shifts, Symbite silently flags it. One person, always verified.
+- [ ] Dynamic Axiom Reconfiguration (`context.axi`) — Symbite dynamically rewrites its own foundational logic rules at runtime based on environment, intent, and threat level. Fluid security logic that cannot be jailbroken through text — rules live in a parsed logic engine, not a system prompt. Governed by an immutable constitution layer above it.
+
+### Phase 7 — Neural Interface
+- [ ] Biometric lock — one person, forever
+- [ ] Neural interface — direct cognitive bond
 
 ---
 
