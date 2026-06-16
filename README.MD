@@ -1,7 +1,7 @@
 # SYMBITE — Bonded AI
 
 > **The AI that doesn't just respond. It bonds.**
-> Built by Chandu — AI Engineer in Progress
+> Built by Chandu — AI Engineer
 
 [![Python](https://img.shields.io/badge/Python-3.10+-FFB000?style=for-the-badge&logo=python)](https://python.org)
 [![Claude](https://img.shields.io/badge/Powered%20by-Claude%20Haiku-8B5CF6?style=for-the-badge)](https://anthropic.com)
