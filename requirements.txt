@@ -23,22 +23,20 @@ httpx>=0.27.0
 # Password hashing — secures user accounts (never store plain passwords)
 bcrypt>=4.1.0
 
-# Web framework — the entire AURA UI is built with this
-streamlit>=1.40.0
-
 # System metrics — real CPU, RAM, disk stats for the dashboard
 psutil>=5.9.0
 
 # Data analytics — used by weekly report (pandas DataFrames)
 pandas>=2.0.0
 
-# Voice — TTS (offline, no API key required)
+# Voice — TTS (offline, macOS Moira Irish voice)
 pyttsx3>=2.90
 
-# Voice — STT (offline capable via Google/Sphinx)
-SpeechRecognition>=3.10.0
-
-# Voice — robotic effect processing
-scipy>=1.11.0
+# Voice — audio recording
 sounddevice>=0.4.6
 soundfile>=0.12.1
+numpy>=1.24.0
+
+# Voice — STT: local Whisper (no internet, no rate limits, no API key)
+# Replaces Google Speech Recognition entirely
+faster-whisper>=1.0.0

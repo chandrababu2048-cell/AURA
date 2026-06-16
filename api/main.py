@@ -24,6 +24,9 @@
 
 import sys
 import os
+import logging
+import threading
+from collections import OrderedDict
 
 # ── Path Fix ───────────────────────────────────────────────
 # api/main.py lives one level below the project root.
@@ -36,28 +39,59 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from dotenv import load_dotenv
+import subprocess
 
 from brain import AuraBrain
 from database import AuraDatabase
 from core.memory import AuraMemory
+from core.perception import AuraPerception
+from core.twin import DigitalTwin
 from weather import get_weather
 from agents.system_agent import SystemAgent
 
 load_dotenv()
 
+logger = logging.getLogger("symbite.api")
+
+# ── Config ─────────────────────────────────────────────────
+# All tunables come from environment variables so prod / staging /
+# dev can differ without touching code. Defaults are safe for local dev.
+MAX_BRAIN_SESSIONS = int(os.getenv("MAX_BRAIN_SESSIONS", "100"))
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv(
+        "ALLOWED_ORIGINS",
+        "http://localhost:5173,http://localhost:3000",
+    ).split(",")
+    if o.strip()
+]
+# Disable voice playback in containerised / headless deploys where
+# `say` (macOS) won't exist. Set VOICE_ENABLED=0 to turn it off.
+VOICE_ENABLED = os.getenv("VOICE_ENABLED", "1") == "1"
+
+# ── Startup Config Validation ──────────────────────────────
+# Fail fast: a missing required key in production is an unrecoverable
+# misconfiguration. Catching it at boot saves debugging a stack trace
+# on every request.
+_REQUIRED_ENV = ["ANTHROPIC_API_KEY"]
+_missing = [k for k in _REQUIRED_ENV if not os.getenv(k)]
+if _missing:
+    raise RuntimeError(
+        f"Missing required environment variables: {', '.join(_missing)}. "
+        "Check your .ENV file."
+    )
+
 # ── App Init ───────────────────────────────────────────────
 app = FastAPI(
-    title="AURA API",
-    description="The FastAPI bridge between the AURA React frontend and the Python brain.",
+    title="Symbite API",
+    description="REST bridge between the Symbite UI and the Python brain.",
     version="1.0.0",
 )
 
 # ── CORS ───────────────────────────────────────────────────
-# Allow the React dev server (Vite default: 5173) and any
-# production origin. Tighten this list before going to prod.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,17 +100,55 @@ app.add_middleware(
 # ── Shared DB instance ─────────────────────────────────────
 db = AuraDatabase()
 
+# ── Shared Twin (read-only Boss state) ─────────────────────
+# DigitalTwin + AuraPerception are stateless readers over the DB —
+# safe to share one instance across all requests. Used by GET /state
+# so the frontend Focus/State cards show real data without spinning
+# up a full AuraBrain session.
+_perception = AuraPerception(db)
+_twin = DigitalTwin(db, _perception)
+
 # ── Brain Session Store ────────────────────────────────────
-# Maps user_id → AuraBrain instance.
-# One brain per user keeps conversation_history isolated.
-_brain_sessions: dict[int, AuraBrain] = {}
+# In-memory LRU of AuraBrain instances, keyed by user_id.
+#
+# Why LRU: each AuraBrain owns conversation_history plus a fleet of
+# cognitive submodules. A long-running server with many users would
+# otherwise leak memory forever. We cap at MAX_BRAIN_SESSIONS and
+# evict the least-recently-used user when we hit the limit. The
+# user's persistent data (conversations, plans, etc.) stays in
+# SQLite — only the in-memory live session is dropped.
+#
+# Why locks: a single user firing two concurrent /chat/think requests
+# would race on the same conversation_history list. We serialize per-
+# user work via a per-user threading.Lock. _brain_sessions_lock guards
+# the LRU map itself.
+_brain_sessions: "OrderedDict[int, AuraBrain]" = OrderedDict()
+_brain_locks: "dict[int, threading.Lock]" = {}
+_brain_sessions_lock = threading.Lock()
 
 
 def _get_brain(user_id: int) -> AuraBrain:
-    """Return the existing AuraBrain for this user, or create one."""
-    if user_id not in _brain_sessions:
-        _brain_sessions[user_id] = AuraBrain(user_id)
-    return _brain_sessions[user_id]
+    """Return an AuraBrain for this user, creating + evicting as needed."""
+    with _brain_sessions_lock:
+        if user_id in _brain_sessions:
+            _brain_sessions.move_to_end(user_id)
+            return _brain_sessions[user_id]
+
+        if len(_brain_sessions) >= MAX_BRAIN_SESSIONS:
+            evicted_id, _ = _brain_sessions.popitem(last=False)
+            _brain_locks.pop(evicted_id, None)
+            logger.info("Evicted brain session for user_id=%s (LRU cap)", evicted_id)
+
+        brain = AuraBrain(user_id)
+        _brain_sessions[user_id] = brain
+        _brain_locks.setdefault(user_id, threading.Lock())
+        return brain
+
+
+def _user_lock(user_id: int) -> threading.Lock:
+    """Return the per-user lock used to serialize a user's brain calls."""
+    with _brain_sessions_lock:
+        return _brain_locks.setdefault(user_id, threading.Lock())
 
 
 # ============================================================
@@ -89,7 +161,7 @@ class RegisterRequest(BaseModel):
     name:       str
     email:      EmailStr
     password:   str        = Field(min_length=6)
-    ai_name:    str        = "AURA"
+    ai_name:    str        = "Symbite"
     wake_time:  str        = "07:00"
     sleep_time: str        = "22:30"
 
@@ -196,6 +268,17 @@ class ReportResponse(BaseModel):
     report: str
 
 
+# ── Boss State (Digital Twin snapshot) ─────────────────────
+
+class StateResponse(BaseModel):
+    stress:        str   # "low" | "medium" | "high"
+    mood:          str
+    energy:        str
+    focus:         str
+    active_goals:  int
+    overdue_tasks: int
+
+
 # ── Weather ────────────────────────────────────────────────
 
 class WeatherResponse(BaseModel):
@@ -225,7 +308,7 @@ class NewsResponse(BaseModel):
 @app.get("/", tags=["health"])
 def root() -> dict[str, str]:
     """Health check — confirms the API is running."""
-    return {"status": "online", "service": "AURA API"}
+    return {"status": "online", "service": "Symbite API"}
 
 
 # ── Auth ───────────────────────────────────────────────────
@@ -277,7 +360,7 @@ def get_user(user_id: int) -> UserResponse:
 
 @app.patch("/users/{user_id}/ai-name", tags=["users"])
 def update_ai_name(user_id: int, body: UpdateAiNameRequest) -> dict[str, str]:
-    """Rename the user's AI companion (e.g. "AURA" → "Jarvis")."""
+    """Rename the user's AI companion (e.g. "Symbite" → "Jarvis")."""
     user = db.get_user_by_id(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found.")
@@ -290,11 +373,11 @@ def update_ai_name(user_id: int, body: UpdateAiNameRequest) -> dict[str, str]:
 @app.post("/chat/think", response_model=ThinkResponse, tags=["chat"])
 def think(body: ThinkRequest) -> ThinkResponse:
     """
-    Send a message to AURA and get a reply.
+    Send a message to Symbite and get a reply.
 
-    Uses the per-user AuraBrain instance so conversation_history
-    accumulates across calls within the same server session —
-    the same behaviour as the Streamlit app.
+    Concurrency: per-user threading.Lock prevents two requests from the
+    same user racing on conversation_history. Different users still
+    proceed in parallel.
 
     mode: "Personal" | "Pro" | "Hybrid"
     """
@@ -303,7 +386,17 @@ def think(body: ThinkRequest) -> ThinkResponse:
         raise HTTPException(status_code=404, detail="User not found.")
 
     brain = _get_brain(body.user_id)
-    reply = brain.think(user_message=body.message, mode=body.mode)
+    with _user_lock(body.user_id):
+        reply = brain.think(user_message=body.message, mode=body.mode)
+
+    # Voice playback is best-effort — never let a missing `say` binary
+    # or a permissions error take down a chat reply.
+    if VOICE_ENABLED:
+        try:
+            subprocess.Popen(["say", "-v", "Samantha", "-r", "220", reply])
+        except Exception as voice_err:
+            logger.warning("Voice playback failed: %s", voice_err)
+
     return ThinkResponse(reply=reply)
 
 
@@ -314,7 +407,9 @@ def clear_chat_session(user_id: int) -> dict[str, str]:
     Call this when the user clicks "New Chat" in the UI.
     Does NOT delete the persistent DB history.
     """
-    _brain_sessions.pop(user_id, None)
+    with _brain_sessions_lock:
+        _brain_sessions.pop(user_id, None)
+        _brain_locks.pop(user_id, None)
     return {"message": "Conversation session cleared."}
 
 
@@ -468,6 +563,25 @@ def get_weekly_report(
 
     memory = AuraMemory(user_id)
     return ReportResponse(report=memory.get_weekly_report())
+
+
+# ── Boss State ─────────────────────────────────────────────
+
+@app.get("/state", response_model=StateResponse, tags=["state"])
+def get_state(
+    user_id: int = Query(..., description="The logged-in user's ID"),
+) -> StateResponse:
+    """
+    Read-only Digital Twin snapshot of the Boss's current state:
+    stress / mood / energy / focus plus active goal + overdue counts.
+    Powers the Focus and Recommendation cards in the frontend.
+    Does NOT create a brain session and never mutates anything.
+    """
+    user = db.get_user_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+
+    return StateResponse(**_twin.snapshot(user_id))
 
 
 # ── Weather ────────────────────────────────────────────────

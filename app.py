@@ -37,7 +37,7 @@ def setup_aura() -> tuple[AuraBrain, dict]:
         # First-time setup — keyboard only happens once ever
         print("\n[ First-Time Setup — one time only ]\n")
         name      = input("Your name: ").strip()
-        ai_name   = input("Name your AI (e.g. AURA): ").strip() or "AURA"
+        ai_name   = input("Name your AI (e.g. Symbite): ").strip() or "Symbite"
         email     = input("Email: ").strip()
         password  = getpass.getpass("Password: ")
         wake_time = input("Wake-up time (e.g. 07:00): ").strip() or "07:00"

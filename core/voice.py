@@ -1,148 +1,142 @@
 # ============================================================
-# core/voice.py — AURA Voice Module (TTS + STT)
+# core/voice.py — AURA Voice Module
 # ============================================================
-# PURPOSE:
-#   Standalone voice module for AURA.
-#   TTS  — Moira (Irish) voice + subtle AI shimmer effect
-#   STT  — Push to talk via sounddevice + Google Speech Recognition
-#   Next — ElevenLabs upgrade (Kerry Condon / FRIDAY quality)
+# TTS: Moira (Irish English) — clean, natural, no effects
+# STT: faster-whisper — 100% local, no internet, no rate limits
 #
-# VOICE DESIGN:
-#   Based on FRIDAY from Iron Man — voiced by Kerry Condon (Irish).
-#   Moira is macOS's Irish English voice: natural lilt, clear, melodic.
-#   Ring modulation at 8% adds a barely-there AI shimmer without
-#   killing the accent's warmth. Rate 200 keeps her crisp but not rushed.
+# WHY faster-whisper?
+#   Google STT requires internet and gets rate-limited constantly.
+#   faster-whisper runs OpenAI's Whisper model locally on your Mac.
+#   No API key, no network, no dropped calls. Always works.
 #
-# STT DESIGN:
-#   No PyAudio needed — sounddevice records directly.
-#   listen() records for max MAX_LISTEN_SEC, sends to Google STT.
-#   Push-to-talk: caller presses Enter to trigger, auto-stops on silence.
-#
-# USAGE (isolation test):
-#   python -c "from core.voice import AuraVoice; AuraVoice().test()"
-#   python -c "from core.voice import AuraVoice; print(AuraVoice().listen())"
+# UPGRADE PATH:
+#   Replace pyttsx3 with ElevenLabs for Kerry Condon quality
 # ============================================================
 
-import tempfile
 import os
+import subprocess
+import tempfile
 import numpy as np
-import soundfile as sf
 import sounddevice as sd
-import speech_recognition as sr
-import pyttsx3
+import soundfile as sf
+from faster_whisper import WhisperModel
 
 
-VOICE_ID        = "com.apple.voice.compact.en-IE.Moira"  # Irish English — FRIDAY-like
-RATE            = 200       # wpm — confident, clear, not rushed
-VOLUME          = 1.0
-ROBOT_MIX       = 0.08      # subtle AI shimmer — preserves Moira's natural warmth
-CARRIER_HZ      = 55        # lower = warmer metallic tone, keeps the lilt intact
-SAMPLE_RATE     = 16000     # Hz — optimal for Google STT
-MAX_LISTEN_SEC  = 8         # max recording duration per push-to-talk
+VOICE           = "Rocko (English (US))"
+RATE            = 200        # wpm — natural pace, Rocko US
+SAMPLE_RATE     = 16000
+MAX_LISTEN_SEC  = 10         # hard ceiling — stops even if you keep talking
+SILENCE_THRESH  = 300        # RMS below this = silence (tune up if noisy room)
+SILENCE_CHUNKS  = 25         # ~1.6s of silence after speech → stop listening
+CHUNK_SIZE      = 1024       # samples per audio chunk
+
+
+def _find_mac_mic() -> int | None:
+    for i, d in enumerate(sd.query_devices()):
+        if d["max_input_channels"] > 0 and "MacBook" in d["name"]:
+            return i
+    for i, d in enumerate(sd.query_devices()):
+        if d["max_input_channels"] > 0:
+            return i
+    return None
+
+
+MIC_DEVICE = _find_mac_mic()
+
+# Load Whisper once at startup — "base" model: fast, accurate, ~145MB download
+# Runs entirely on CPU. First run downloads the model automatically.
+_whisper: WhisperModel | None = None
+
+def _get_whisper() -> WhisperModel:
+    global _whisper
+    if _whisper is None:
+        print("  [ Loading Whisper model... (one-time download ~145MB) ]")
+        _whisper = WhisperModel("base", device="cpu", compute_type="int8")
+        print("  [ Whisper ready ]")
+    return _whisper
 
 
 class AuraVoice:
     def __init__(self):
-        self.engine = pyttsx3.init()
-        self._configure()
-
-    def _configure(self):
-        self.engine.setProperty("voice",   VOICE_ID)
-        self.engine.setProperty("rate",    RATE)
-        self.engine.setProperty("volume",  VOLUME)
-
-    def _apply_shimmer(self, audio: np.ndarray, samplerate: int) -> np.ndarray:
-        """
-        Subtle ring modulation — AI shimmer effect.
-        Blends original + modulated signal at ROBOT_MIX ratio.
-        Keeps the Irish accent's melodic quality intact.
-        """
-        if audio.size == 0:
-            return audio
-
-        t = np.arange(len(audio)) / samplerate
-        carrier = np.sin(2 * np.pi * CARRIER_HZ * t).astype(np.float32)
-
-        if audio.ndim == 2:
-            carrier = carrier[:, np.newaxis]
-
-        modulated = audio * carrier
-        result = (1 - ROBOT_MIX) * audio + ROBOT_MIX * modulated
-
-        peak = np.max(np.abs(result))
-        if peak > 0:
-            result = result / peak * 0.95
-        return result
+        # Pre-load Whisper at startup so first listen isn't slow
+        _get_whisper()
 
     def speak(self, text: str):
-        """Speak text with Moira (Irish) voice + subtle AI shimmer."""
-        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-            tmp_path = f.name
-
-        try:
-            self.engine.save_to_file(text, tmp_path)
-            self.engine.runAndWait()
-
-            audio, samplerate = sf.read(tmp_path, dtype="float32")
-            if audio.size == 0:
-                self.engine.say(text)
-                self.engine.runAndWait()
-                return
-
-            processed = self._apply_shimmer(audio, samplerate)
-            sd.play(processed, samplerate)
-            sd.wait()
-        finally:
-            os.unlink(tmp_path)
+        """
+        Speak using macOS built-in Moira voice via the 'say' command.
+        No Python packages needed — works 100% on any Mac.
+        -v Moira = Irish English voice
+        -r 220   = fast, sharp pace like FRIDAY (default is 175)
+        """
+        subprocess.run(["say", "-v", VOICE, "-r", str(RATE), text])
 
     def listen(self) -> str | None:
         """
-        Push-to-talk STT.
-        Records for up to MAX_LISTEN_SEC seconds via sounddevice,
-        transcribes with Google Speech Recognition.
-        Returns the recognised text, or None if nothing was heard.
+        Listen with smart silence detection.
+        Starts recording when you speak, stops ~1.6s after you go quiet.
+        No fixed wait — responds as soon as you're done talking.
+        Uses local Whisper — no internet, no rate limits.
         """
-        # Find MacBook mic explicitly — avoids iPhone/Bluetooth being picked
-        mic = None
-        for i, d in enumerate(sd.query_devices()):
-            if d["max_input_channels"] > 0 and "MacBook" in d["name"]:
-                mic = i
-                break
+        chunks        = []
+        silent_count  = 0
+        speech_started = False
+        max_chunks    = int(MAX_LISTEN_SEC * SAMPLE_RATE / CHUNK_SIZE)
 
-        print("\n  [ Listening... speak now ]")
-        recording = sd.rec(
-            int(MAX_LISTEN_SEC * SAMPLE_RATE),
-            samplerate=SAMPLE_RATE,
-            channels=1,
-            dtype="int16",
-            device=mic,
-        )
-        sd.wait()
-        print("  [ Got it — processing... ]")
-
-        raw = recording.tobytes()
-        audio_data = sr.AudioData(raw, SAMPLE_RATE, 2)
-        recognizer = sr.Recognizer()
+        print("\n  [ Listening... ]")
 
         try:
-            text = recognizer.recognize_google(audio_data)
-            return text
-        except sr.UnknownValueError:
-            return None
-        except sr.RequestError:
+            with sd.InputStream(
+                samplerate=SAMPLE_RATE,
+                channels=1,
+                dtype="int16",
+                device=MIC_DEVICE,
+                blocksize=CHUNK_SIZE,
+            ) as stream:
+                while True:
+                    data, _ = stream.read(CHUNK_SIZE)
+                    rms = np.sqrt(np.mean(data.astype(np.float32) ** 2))
+
+                    if rms > SILENCE_THRESH:
+                        # Sound detected — start or continue recording
+                        speech_started = True
+                        silent_count   = 0
+                        chunks.append(data.copy())
+                    elif speech_started:
+                        # Silence after speech — count down to stop
+                        chunks.append(data.copy())
+                        silent_count += 1
+                        if silent_count >= SILENCE_CHUNKS:
+                            break  # you stopped talking — process now
+                    # else: silence before speech started — keep waiting
+
+                    # Hard ceiling
+                    if len(chunks) >= max_chunks:
+                        break
+
+        except Exception as e:
+            print(f"  [ Mic error: {e} ]")
             return None
 
-    def test(self):
-        """Self-test: AURA introduces herself — informal, witty, FRIDAY-style."""
-        self.speak(
-            "Oh, you're actually here. Brilliant. "
-            "I'm AURA — your AI companion, personal assistant, and honestly, "
-            "probably the most useful thing in your life right now. "
-            "All systems are up. Try not to break anything."
-        )
-        self.speak(
-            "Right, so here's the deal. "
-            "I'll talk, you listen — or don't, your call. "
-            "Soon you can talk back and I'll actually listen too, which is more than most people manage. "
-            "Voice is online. I'm ready. Are you?"
-        )
+        if not chunks or not speech_started:
+            return None
+
+        # Combine chunks → wav file → Whisper
+        audio = np.concatenate(chunks, axis=0)
+
+        tmp_path = None
+        try:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                tmp_path = f.name
+            sf.write(tmp_path, audio, SAMPLE_RATE)
+
+            model    = _get_whisper()
+            segments, _ = model.transcribe(tmp_path, language="en")
+            text     = " ".join(s.text for s in segments).strip()
+            return text if text else None
+
+        except Exception as e:
+            print(f"  [ Transcription error: {e} ]")
+            return None
+        finally:
+            if tmp_path and os.path.exists(tmp_path):
+                os.unlink(tmp_path)

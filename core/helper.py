@@ -17,7 +17,6 @@
 #   or we can use AppleScript in Phase 2 to auto-tile them.
 # ============================================================
 
-import time
 import subprocess   # runs macOS terminal commands — used to open apps
 import webbrowser   # Python built-in — talks directly to macOS to open URLs
 
@@ -45,17 +44,6 @@ APP_ALIASES = {
     "postman":            "Postman",
 }
 
-
-# ── Greeting Utilities ────────────────────────────────────
-
-def say_hello(name):
-    return f"Hello {name}, welcome to AURA."
-
-def add_numbers(a, b):
-    return a + b
-
-def get_day_motivation(name):
-    return f"You've got this {name}. Keep building."
 
 def get_greeting(hour: int) -> str:
     """Returns time-appropriate greeting based on the hour (0-23)."""
@@ -105,13 +93,7 @@ class SystemExecutive:
         We open them 1.5 seconds apart so the browser has time
         to load the first tab before opening the second.
         """
-        # Tab 1 — Live world map (same site as in the screenshot)
         webbrowser.open("https://worldmonitor.app/")
-
-        # Small pause so macOS opens them as separate tabs, not at the same instant
-        time.sleep(1.5)
-
-        # Tab 2 — Bloomberg live news (geopolitics, markets, world events)
         webbrowser.open("https://www.bloomberg.com/live")
 
         return "World briefing open, Boss. Map and live feed are up."

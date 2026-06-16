@@ -532,7 +532,7 @@ const lines=[
   {id:"l4",p:"AI",  t:"Claude engine online — latency: 0.3s"},
   {id:"l5",p:"WX",  t:"Atmospheric data feed connected"},
   {id:"l6",p:"DB",  t:"User database initialized — encryption active"},
-  {id:"l7",p:"AURA",t:"[████████████] 100% — All systems nominal",ok:true},
+  {id:"l7",p:"SYMBITE",t:"[████████████] 100% — All systems nominal",ok:true},
 ];
 function type(el,full,cb){
   let i=0;el.style.opacity="1";el.innerHTML='<span class="cur"></span>';
@@ -615,7 +615,7 @@ if st.session_state.page == "auth":
                 rname  = st.text_input("Operator Name",  placeholder="Your name...")
                 remail = st.text_input("Email Address",   placeholder="Your email...")
             with c2:
-                rai    = st.text_input("Name Your AI",    value="AURA")
+                rai    = st.text_input("Name Your AI",    value="Symbite")
                 rwake  = st.text_input("Wake-Up Time",    value="07:00")
             rpass = st.text_input("Create Access Code", placeholder="Min 6 characters...", type="password")
             _, c, _ = st.columns([1,2,1])
@@ -627,7 +627,7 @@ if st.session_state.page == "auth":
                 elif len(rpass) < 6:
                     st.error("⚠ Min 6 characters.")
                 else:
-                    res = db.register_user(rname, remail, rpass, rai or "AURA", rwake or "07:00")
+                    res = db.register_user(rname, remail, rpass, rai or "Symbite", rwake or "07:00")
                     if res["success"]:
                         st.success(f"✓ Profile created! Welcome, {rname}. Please log in.")
                     else:

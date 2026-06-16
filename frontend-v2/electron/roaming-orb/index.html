@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Symbite Orb</title>
+    <style>
+      /* =============================================================
+         ROAMING ORB WINDOW
+         The window is 120×120 with transparent background.
+         ONLY the orb and its glow are visible — desktop shows through.
+         ============================================================= */
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 120px;
+        height: 120px;
+        background: transparent;
+        overflow: hidden;
+        /* Allow the window to be dragged from anywhere on the orb */
+        -webkit-app-region: drag;
+        user-select: none;
+      }
+
+      #root {
+        width: 120px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+      }
+
+      /* ── Orb container ── */
+      .orb-wrap {
+        position: relative;
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+        /* Clicking should work, not dragging from the button area */
+        -webkit-app-region: no-drag;
+        animation: orb-float 5s ease-in-out infinite;
+        transition: transform 0.25s ease, filter 0.25s ease;
+      }
+
+      .orb-wrap:hover {
+        transform: scale(1.12);
+        filter: drop-shadow(0 0 28px rgba(46, 168, 255, 0.95));
+      }
+
+      /* ── Outer glow halo ── */
+      .orb-halo {
+        position: absolute;
+        inset: -30%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 50% 50%,
+          rgba(125, 200, 255, 0.55) 0%,
+          rgba(125, 200, 255, 0.18) 40%,
+          rgba(125, 200, 255, 0) 70%
+        );
+        filter: blur(10px);
+        animation: halo-pulse 3.5s ease-in-out infinite;
+      }
+
+      /* ── Outer ring ── */
+      .orb-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(125, 200, 255, 0.55);
+        box-shadow:
+          0 0 30px rgba(125, 200, 255, 0.35),
+          inset 0 0 30px rgba(125, 200, 255, 0.2);
+        animation: ring-breathe 3.5s ease-in-out infinite;
+      }
+
+      /* ── Core liquid orb ── */
+      .orb-core {
+        position: absolute;
+        inset: 12%;
+        border-radius: 50%;
+        overflow: hidden;
+        background: radial-gradient(
+          120% 120% at 30% 25%,
+          #ffffff 0%,
+          #bee3ff 18%,
+          #5fb7f2 45%,
+          #1e6fb4 75%,
+          #0b3b73 100%
+        );
+      }
+
+      /* liquid highlight */
+      .orb-highlight {
+        position: absolute;
+        left: 15%;
+        top: 12%;
+        width: 40%;
+        height: 28%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 40% 40%,
+          rgba(255, 255, 255, 0.9) 0%,
+          rgba(255, 255, 255, 0) 70%
+        );
+        filter: blur(2px);
+        animation: highlight-drift 5s ease-in-out infinite;
+      }
+
+      /* inner dark morphing droplet */
+      .orb-droplet {
+        position: absolute;
+        left: 22%;
+        top: 30%;
+        width: 55%;
+        height: 55%;
+        border-radius: 50%;
+        background: radial-gradient(
+          circle at 55% 45%,
+          #1d3f75 0%,
+          #0a1e3c 65%,
+          #061229 100%
+        );
+        filter: blur(0.5px);
+        animation: droplet-morph 5s ease-in-out infinite;
+      }
+
+      /* ── Orbiting particles (SVG) ── */
+      .orb-particles {
+        position: absolute;
+        inset: 0;
+      }
+
+      /* ── Ripple rings (visible on hover) ── */
+      .orb-ripple {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        border: 1px solid rgba(46, 168, 255, 0.5);
+        opacity: 0;
+        animation: ripple-out 2.4s ease-out infinite;
+      }
+
+      .orb-ripple:nth-child(2) {
+        animation-delay: 0.8s;
+      }
+
+      .orb-ripple:nth-child(3) {
+        animation-delay: 1.6s;
+      }
+
+      /* ── Drop shadow (root glow engine) ── */
+      .orb-wrap {
+        filter: drop-shadow(0 0 24px rgba(0, 150, 255, 0.5));
+      }
+
+      /* =============================================================
+         KEYFRAMES
+         ============================================================= */
+
+      @keyframes orb-float {
+        0%, 100% { transform: translateY(0px); }
+        25%       { transform: translateY(-10px); }
+        50%       { transform: translateY(-6px); }
+        75%       { transform: translateY(-12px); }
+      }
+
+      @keyframes halo-pulse {
+        0%, 100% { opacity: 0.7; transform: scale(1); }
+        50%       { opacity: 1;   transform: scale(1.08); }
+      }
+
+      @keyframes ring-breathe {
+        0%, 100% { transform: scale(1);    opacity: 0.7; }
+        50%       { transform: scale(1.06); opacity: 1;   }
+      }
+
+      @keyframes highlight-drift {
+        0%, 100% { transform: translate(0px,  0px)  scale(1); }
+        33%       { transform: translate(5px,  3px)  scale(1.04); }
+        66%       { transform: translate(-3px, 2px)  scale(0.98); }
+      }
+
+      @keyframes droplet-morph {
+        0%, 100% {
+          border-radius: 50%;
+          transform: scale(1) rotate(0deg);
+        }
+        25% {
+          border-radius: 48% 52% 55% 45% / 52% 48% 55% 45%;
+          transform: scale(1.04) rotate(8deg);
+        }
+        50% {
+          border-radius: 52% 48% 46% 54% / 48% 52% 46% 54%;
+          transform: scale(0.97) rotate(-4deg);
+        }
+        75% {
+          border-radius: 50% 50% 52% 48% / 50% 50% 55% 45%;
+          transform: scale(1.02) rotate(6deg);
+        }
+      }
+
+      @keyframes ripple-out {
+        0%   { transform: scale(0.9); opacity: 0.6; }
+        100% { transform: scale(1.6); opacity: 0;   }
+      }
+
+      /* particle blink */
+      @keyframes p-blink {
+        0%, 100% { opacity: 0.2; r: 1.5; }
+        50%       { opacity: 0.9; r: 2;   }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="orb-wrap" id="orb">
+        <!-- Ripple rings -->
+        <div class="orb-ripple"></div>
+        <div class="orb-ripple"></div>
+        <div class="orb-ripple"></div>
+
+        <!-- Outer halo -->
+        <div class="orb-halo"></div>
+
+        <!-- Outer ring -->
+        <div class="orb-ring"></div>
+
+        <!-- Orbiting particles -->
+        <svg class="orb-particles" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+          <!-- 12 particles around the orb — hand-placed for stability (no JS Math.random) -->
+          <circle cx="50" cy="4"  r="1.6" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.1s ease-in-out infinite 0.0s"/>
+          <circle cx="75" cy="11" r="1.8" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.8s ease-in-out infinite 0.3s"/>
+          <circle cx="93" cy="35" r="1.4" fill="rgba(125,200,255,0.8)" style="animation: p-blink 2.9s ease-in-out infinite 0.6s"/>
+          <circle cx="96" cy="62" r="2.0" fill="rgba(125,200,255,0.8)" style="animation: p-blink 4.2s ease-in-out infinite 0.9s"/>
+          <circle cx="78" cy="84" r="1.5" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.4s ease-in-out infinite 1.2s"/>
+          <circle cx="52" cy="95" r="1.7" fill="rgba(125,200,255,0.8)" style="animation: p-blink 2.8s ease-in-out infinite 1.5s"/>
+          <circle cx="25" cy="87" r="1.9" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.6s ease-in-out infinite 1.8s"/>
+          <circle cx="7"  cy="65" r="1.4" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.0s ease-in-out infinite 2.1s"/>
+          <circle cx="4"  cy="38" r="1.8" fill="rgba(125,200,255,0.8)" style="animation: p-blink 4.0s ease-in-out infinite 2.4s"/>
+          <circle cx="20" cy="14" r="1.5" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.3s ease-in-out infinite 2.7s"/>
+          <circle cx="65" cy="6"  r="1.6" fill="rgba(125,200,255,0.8)" style="animation: p-blink 2.7s ease-in-out infinite 0.15s"/>
+          <circle cx="88" cy="22" r="1.3" fill="rgba(125,200,255,0.8)" style="animation: p-blink 3.9s ease-in-out infinite 0.45s"/>
+        </svg>
+
+        <!-- Core liquid orb -->
+        <div class="orb-core">
+          <div class="orb-highlight"></div>
+          <div class="orb-droplet"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ── Click handler: orb clicked → tell main process to show the main window
+      const orb = document.getElementById("orb");
+
+      orb.addEventListener("click", () => {
+        if (window.electronAPI && window.electronAPI.openMainWindow) {
+          window.electronAPI.openMainWindow();
+        }
+      });
+
+      // ── Hover: amplify glow via CSS class toggle
+      orb.addEventListener("mouseenter", () => {
+        orb.style.filter = "drop-shadow(0 0 36px rgba(46, 168, 255, 0.95))";
+      });
+
+      orb.addEventListener("mouseleave", () => {
+        orb.style.filter = "drop-shadow(0 0 24px rgba(0, 150, 255, 0.5))";
+      });
+    </script>
+  </body>
+</html>

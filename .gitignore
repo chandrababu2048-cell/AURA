@@ -6,6 +6,8 @@
 .ENV
 .env
 *.env
+.env.save
+.env.*
 
 # Python virtual environment
 .venv/
@@ -30,3 +32,11 @@ aura_data/
 
 # Streamlit cache
 .streamlit/secrets.toml
+
+# Node
+node_modules/
+dist/
+
+# Logs
+logs/
+*.log

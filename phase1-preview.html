@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AURA — Design System Preview (Steps 1-3)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link
+  href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Gochi+Hand&display=swap"
+  rel="stylesheet"
+/>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  /* ============================================================
+     STEP 1 — Nebula Canvas
+     body = 20px dot grid on top of dark nebula.
+     (We use a CSS-generated nebula here so the preview works
+     without a local image asset. In the real app, body loads
+     /nebula.jpg as url("/nebula.jpg") center/cover fixed.)
+     ============================================================ */
+  body {
+    font-family: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    color: #E6F2FF;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #050B17;
+    background-image:
+      /* dot grid — 20px */
+      radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px),
+      /* starfield */
+      radial-gradient(1.2px 1.2px at 14% 18%, rgba(255,255,255,0.8), transparent 60%),
+      radial-gradient(1px 1px at 82% 12%, rgba(255,255,255,0.55), transparent 60%),
+      radial-gradient(1.5px 1.5px at 65% 72%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(1px 1px at 30% 82%, rgba(255,255,255,0.45), transparent 60%),
+      radial-gradient(1px 1px at 46% 38%, rgba(255,255,255,0.5), transparent 60%),
+      /* nebula clouds — simulating /nebula.jpg */
+      radial-gradient(55% 45% at 22% 25%, rgba(50,110,190,0.55) 0%, rgba(50,110,190,0) 65%),
+      radial-gradient(50% 50% at 80% 70%, rgba(80,140,220,0.45) 0%, rgba(80,140,220,0) 65%),
+      radial-gradient(45% 40% at 70% 30%, rgba(140,200,255,0.22) 0%, rgba(140,200,255,0) 70%),
+      radial-gradient(40% 35% at 25% 75%, rgba(100,170,240,0.28) 0%, rgba(100,170,240,0) 70%),
+      linear-gradient(180deg, #050B17 0%, #0A1628 45%, #06101F 100%);
+    background-size:
+      20px 20px,
+      auto, auto, auto, auto, auto,
+      auto, auto, auto, auto,
+      auto;
+    background-position:
+      0 0,
+      0 0, 0 0, 0 0, 0 0, 0 0,
+      0 0, 0 0, 0 0, 0 0,
+      0 0;
+    background-repeat:
+      repeat,
+      no-repeat, no-repeat, no-repeat, no-repeat, no-repeat,
+      no-repeat, no-repeat, no-repeat, no-repeat,
+      no-repeat;
+    background-attachment:
+      scroll,
+      fixed, fixed, fixed, fixed, fixed,
+      fixed, fixed, fixed, fixed,
+      fixed;
+  }
+
+  /* 3-panel layout container */
+  .shell {
+    height: 100vh; width: 100vw;
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 320px 1fr 380px;
+    gap: 18px;
+    position: relative;
+  }
+
+  /* ============================================================
+     STEP 2 — True Glass (exact spec)
+     ============================================================ */
+  .glass,
+  .glass-strong,
+  .glass-soft,
+  .glass-ghost {
+    backdrop-filter: blur(25px) saturate(160%);
+    -webkit-backdrop-filter: blur(25px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .glass {
+    background: rgba(15, 15, 25, 0.35);
+    /* Step 3 — deep drop shadow */
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+  .glass-strong {
+    background: rgba(15, 15, 25, 0.45);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.10),
+      0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+  .glass-soft {
+    background: rgba(15, 15, 25, 0.25);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+  .glass-ghost {
+    background: rgba(15, 15, 25, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.05),
+      0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  /* ================= Typography helpers ================= */
+  .font-display { font-family: "Space Grotesk", "Inter", sans-serif; letter-spacing: 0.02em; }
+  .font-hand { font-family: "Gochi Hand", "Caveat", cursive; }
+  .label {
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: #6D86A8; font-weight: 600;
+  }
+  .soft { color: #9BB4D4; }
+  .muted { color: #6D86A8; }
+  .ink { color: #E6F2FF; }
+  .accent { color: #7DC8FF; }
+
+  /* ================= Panels ================= */
+  .panel { padding: 20px; overflow: hidden; }
+  .left-panel { display: flex; flex-direction: column; gap: 14px; margin-left: 96px; }
+  .cards { display: flex; flex-direction: column; gap: 12px; flex: 1; }
+
+  .card-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+  .card-head h3 { font-family: "Space Grotesk", sans-serif; font-size: 15px; font-weight: 600; color: #E6F2FF; }
+  .card-head p { font-size: 12px; color: #9BB4D4; margin-top: 2px; }
+
+  .progress-ring {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: conic-gradient(#7DC8FF 0deg, #7DC8FF 90deg, rgba(255,255,255,0.1) 90deg);
+    display: grid; place-items: center;
+  }
+  .progress-ring > div {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #0A1628;
+    display: grid; place-items: center;
+    font-size: 10px; font-weight: 700; color: #7DC8FF;
+  }
+
+  .task-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06); font-size: 13px; color: #E6F2FF; }
+  .task-row:first-of-type { border-top: none; }
+  .cb {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1px solid rgba(255,255,255,0.25);
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .cb.done { background: linear-gradient(135deg, #7DC8FF, #2EA8FF); border-color: transparent; }
+  .cb.done::before { content: "✓"; color: white; font-size: 11px; font-weight: 700; }
+  .task-row.done .txt { color: #6D86A8; text-decoration: line-through; }
+
+  .bar { height: 6px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; margin-top: 10px; }
+  .bar > span { display: block; height: 100%; background: linear-gradient(90deg, #7DC8FF, #2EA8FF); border-radius: 999px; }
+
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .metric { font-family: "Space Grotesk", sans-serif; font-size: 28px; font-weight: 700; color: #E6F2FF; }
+  .metric small { font-size: 13px; color: #6D86A8; font-weight: 500; }
+
+  /* Sidebar rail (absolute overlay on left) */
+  .rail {
+    width: 72px;
+    padding: 18px 0;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    position: absolute;
+    top: 24px; bottom: 24px; left: 24px;
+    z-index: 2;
+  }
+  .logo { width: 40px; height: 44px; margin-bottom: 4px; position: relative; }
+  .logo .blob {
+    position: absolute; inset: 4px 4px 6px 4px;
+    background: radial-gradient(circle at 35% 30%, #2EA8FF 0%, #0A1628 70%);
+    border-radius: 50% 50% 48% 52% / 50% 50% 55% 55%;
+    box-shadow: 0 0 22px rgba(46,168,255,0.55), inset -2px -4px 8px rgba(0,0,0,0.4);
+  }
+  .logo .bead {
+    position: absolute; width: 7px; height: 7px;
+    border-radius: 50%; background: #7DC8FF;
+    top: -2px; left: 50%; transform: translateX(-50%);
+    box-shadow: 0 0 10px rgba(125,200,255,0.9);
+  }
+  .logo .drip {
+    position: absolute; width: 5px; height: 7px;
+    bottom: -2px; left: 50%; transform: translateX(-50%);
+    background: #1A78D2;
+    border-radius: 50% 50% 60% 60%;
+  }
+  .brand {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 10px; letter-spacing: 0.38em; color: #E6F2FF; font-weight: 600;
+    text-align: center;
+  }
+
+  .nav { margin-top: 18px; width: 100%; display: flex; flex-direction: column; gap: 4px; padding: 0 10px; }
+  .nav-item {
+    font-size: 11px; padding: 8px 10px; border-radius: 10px;
+    color: #9BB4D4; display: flex; align-items: center; gap: 8px;
+    cursor: pointer; position: relative;
+  }
+  .nav-item .dot { width: 14px; height: 14px; border-radius: 3px; background: currentColor; opacity: 0.5; }
+  .nav-item.active {
+    color: white;
+    background: linear-gradient(90deg, rgba(46,168,255,0.25), rgba(46,168,255,0.05));
+    box-shadow: inset 0 0 0 1px rgba(46,168,255,0.4), 0 0 20px rgba(46,168,255,0.2);
+  }
+  .nav-item.active .dot { opacity: 1; color: #7DC8FF; }
+
+  .user-chip {
+    margin: auto 10px 0;
+    padding: 8px; border-radius: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #7DC8FF, #1A78D2);
+    display: grid; place-items: center;
+    color: white; font-weight: 700; font-size: 13px;
+    box-shadow: 0 0 18px rgba(46,168,255,0.5);
+  }
+  .user-name { font-family: "Gochi Hand", cursive; font-size: 18px; line-height: 1; color: #E6F2FF; }
+  .user-plan { font-size: 9px; letter-spacing: 0.12em; color: #6D86A8; text-transform: uppercase; margin-top: 2px; }
+
+  /* ================= Center panel ================= */
+  .center-panel { padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+  .aura-title {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 56px; letter-spacing: 0.28em; font-weight: 400;
+    background: linear-gradient(to bottom, #FFFFFF, #7DC8FF 50%, #2EA8FF);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-shadow: 0 0 40px rgba(46,168,255,0.3);
+    margin-top: 8px;
+  }
+  .aura-sub { font-size: 11px; letter-spacing: 0.42em; color: #9BB4D4; margin-top: -2px; }
+
+  /* ============================================================
+     STEP 3 — Orb Glow Engine
+     filter: drop-shadow(0 0 40px rgba(0, 150, 255, 0.45))
+     applied to the orb's wrapper. Cast by the silhouette so it
+     bleeds onto the grid and center panel behind it.
+     ============================================================ */
+  .orb-wrap {
+    width: 260px; height: 260px;
+    margin: 12px 0;
+    filter: drop-shadow(0 0 40px rgba(0, 150, 255, 0.45));
+    position: relative;
+  }
+  .orb {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #CFE7FF 0%, #5FB7F2 45%, #1A4D85 78%, #06152A 100%);
+    position: relative;
+  }
+  .orb::after {
+    content: "";
+    position: absolute;
+    inset: 22%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, #050B17 45%, transparent 70%);
+  }
+  .orb-ring {
+    position: absolute; inset: -4%;
+    border-radius: 50%;
+    border: 1px solid rgba(125,200,255,0.5);
+    box-shadow: inset 0 0 40px rgba(125,200,255,0.2);
+  }
+
+  .online { font-size: 12px; color: #9BB4D4; display: flex; gap: 8px; align-items: center; }
+  .online::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 10px #4ADE80; }
+
+  .round-btns { display: flex; gap: 22px; margin-top: 12px; }
+  .round-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; color: #9BB4D4; letter-spacing: 0.22em; text-transform: uppercase; }
+  .round-btn > .b {
+    width: 48px; height: 48px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(15, 15, 25, 0.35);
+    backdrop-filter: blur(15px);
+    display: grid; place-items: center;
+    color: #7DC8FF; font-size: 20px;
+  }
+
+  .ask-bar {
+    margin-top: 16px; width: 100%; max-width: 460px;
+    padding: 12px 16px; border-radius: 999px;
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(15, 15, 25, 0.35);
+    border: 1px solid rgba(255,255,255,0.12);
+    backdrop-filter: blur(25px) saturate(160%);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.8);
+    font-size: 14px; color: #9BB4D4;
+  }
+  .ask-bar .k { padding: 2px 8px; border-radius: 6px; background: rgba(255,255,255,0.08); font-size: 11px; color: #E6F2FF; margin-left: auto; }
+
+  /* ================= Right chat panel ================= */
+  .chat-head { display: flex; justify-content: space-between; align-items: center; }
+  .chat-head .t { font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: #9BB4D4; font-weight: 600; }
+
+  .bubbles { margin-top: 16px; display: flex; flex-direction: column; gap: 14px; flex: 1; overflow-y: auto; }
+
+  .b-ai { display: flex; gap: 8px; align-items: flex-end; }
+  .b-ai .mini { width: 24px; height: 24px; border-radius: 50%; background: #2EA8FF; box-shadow: 0 0 10px rgba(46,168,255,0.6); flex-shrink: 0; }
+  .b-ai .bubble {
+    background: rgba(15, 15, 25, 0.25);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 20px 20px 20px 6px;
+    padding: 10px 12px; font-size: 13px; line-height: 1.5; color: #E6F2FF;
+    max-width: 260px;
+    backdrop-filter: blur(25px) saturate(160%);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.8);
+  }
+  .b-you { display: flex; gap: 8px; align-items: flex-end; justify-content: flex-end; }
+  .b-you .bubble {
+    background: linear-gradient(135deg, #7DC8FF, #2EA8FF);
+    border-radius: 20px 20px 6px 20px;
+    padding: 10px 12px; font-size: 13px; color: white;
+    max-width: 220px;
+    box-shadow: 0 4px 18px rgba(46,168,255,0.35);
+  }
+  .b-you .av { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg,#7DC8FF,#1A78D2); color:white; display:grid;place-items:center;font-size:11px;font-weight:700; flex-shrink:0; }
+
+  .chat-input {
+    margin-top: 12px;
+    padding: 12px 14px;
+    border-radius: 999px;
+    background: rgba(15, 15, 25, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(25px) saturate(160%);
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.8);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: #6D86A8;
+  }
+  .chat-input .send { margin-left: auto; width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #7DC8FF, #2EA8FF); display: grid; place-items: center; color: white; font-size: 14px; }
+
+  /* Legend */
+  .legend {
+    position: absolute; z-index: 3;
+    top: 14px; right: 24px;
+    background: rgba(15, 15, 25, 0.55);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 11px; color: #9BB4D4;
+    display: flex; gap: 16px;
+    backdrop-filter: blur(12px);
+  }
+  .legend b { color: #7DC8FF; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="legend">
+    <span><b>glass</b> rgba(15,15,25,0.35) · blur(25px) · border 1px rgba(255,255,255,0.12) · radius 24px</span>
+    <span><b>shadow</b> 0 8px 32px rgba(0,0,0,0.8)</span>
+    <span><b>orb</b> drop-shadow(0 0 40px rgba(0,150,255,0.45))</span>
+  </div>
+
+  <!-- LEFT PANEL -->
+  <div class="panel glass left-panel">
+    <div class="label">Today Overview</div>
+    <div class="cards">
+      <div class="glass-soft" style="padding:16px;">
+        <div class="card-head">
+          <div><h3>Daily Tasks</h3><p>Today&rsquo;s priorities</p></div>
+          <div class="progress-ring"><div>1/3</div></div>
+        </div>
+        <div style="margin-top:10px;">
+          <div class="task-row done"><div class="cb done"></div><span class="txt">Finish React Dashboard</span></div>
+          <div class="task-row"><div class="cb"></div><span class="txt">Prepare .NET Interview</span></div>
+          <div class="task-row"><div class="cb"></div><span class="txt">DSA Practice (Trees)</span></div>
+        </div>
+      </div>
+
+      <div class="glass-soft" style="padding:16px;">
+        <div class="card-head">
+          <div><h3>Weekly Goal Progress</h3><p>Build AURA MVP</p></div>
+          <div style="font-size:13px; font-weight:700; color:#7DC8FF;">72%</div>
+        </div>
+        <div class="bar"><span style="width:72%"></span></div>
+      </div>
+
+      <div class="row-2">
+        <div class="glass-soft" style="padding:14px;">
+          <div class="label" style="font-size:10px;">Focus Score</div>
+          <div class="metric" style="margin-top:6px;">82<small>/100</small></div>
+        </div>
+        <div class="glass-soft" style="padding:14px;">
+          <div class="label" style="font-size:10px;">Skill Level</div>
+          <p class="muted" style="font-size:11px;margin-top:6px;">Backend</p>
+          <div class="accent" style="font-family:'Space Grotesk';font-weight:600;font-size:15px;">Advanced</div>
+        </div>
+      </div>
+
+      <div class="glass-soft" style="padding:16px;">
+        <div class="label">AURA Recommends</div>
+        <p style="margin-top:10px;font-size:13px;" class="ink">✦ Best time for deep work</p>
+        <p style="margin-top:4px;font-family:'Space Grotesk';font-size:20px;background:linear-gradient(to right,#7DC8FF,#2EA8FF);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:600;">
+          7:00 PM &ndash; 10:00 PM
+        </p>
+        <p style="margin-top:4px;font-size:11px;" class="soft">You&rsquo;re most productive during this window today.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar rail -->
+  <div class="glass rail">
+    <div class="logo">
+      <div class="bead"></div>
+      <div class="blob"></div>
+      <div class="drip"></div>
+    </div>
+    <div class="brand">AURA</div>
+
+    <div class="nav">
+      <div class="nav-item active"><div class="dot"></div>Home</div>
+      <div class="nav-item"><div class="dot"></div>Tasks</div>
+      <div class="nav-item"><div class="dot"></div>Goals</div>
+      <div class="nav-item"><div class="dot"></div>Skills</div>
+      <div class="nav-item"><div class="dot"></div>Calendar</div>
+      <div class="nav-item"><div class="dot"></div>Memory</div>
+      <div class="nav-item"><div class="dot"></div>Insights</div>
+      <div class="nav-item"><div class="dot"></div>Connect</div>
+      <div class="nav-item"><div class="dot"></div>Settings</div>
+    </div>
+
+    <div class="user-chip glass-soft">
+      <div class="avatar">A</div>
+      <div>
+        <div class="user-name">Aditya</div>
+        <div class="user-plan">Pro Plan</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER PANEL -->
+  <div class="panel glass-strong center-panel">
+    <div style="width:100%;display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;gap:6px;">
+        <span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.18);"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.18);"></span>
+        <span style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.18);"></span>
+      </div>
+      <div style="display:flex;gap:3px;align-items:end;height:14px;">
+        <span style="width:2px;height:6px;background:#7DC8FF;border-radius:1px;"></span>
+        <span style="width:2px;height:10px;background:#7DC8FF;border-radius:1px;"></span>
+        <span style="width:2px;height:14px;background:#7DC8FF;border-radius:1px;"></span>
+        <span style="width:2px;height:8px;background:#7DC8FF;border-radius:1px;"></span>
+        <span style="width:2px;height:12px;background:#7DC8FF;border-radius:1px;"></span>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:4px;">
+      <div class="aura-title">AURA</div>
+      <div class="aura-sub">SYMBIOTE INTELLIGENCE</div>
+    </div>
+
+    <div class="orb-wrap">
+      <div class="orb-ring"></div>
+      <div class="orb"></div>
+    </div>
+
+    <div class="online">Online &middot; Ready to assist</div>
+
+    <div class="round-btns">
+      <div class="round-btn"><div class="b">🎙</div>Voice</div>
+      <div class="round-btn"><div class="b">📷</div>Camera</div>
+      <div class="round-btn"><div class="b">⚡</div>Connect</div>
+    </div>
+
+    <div class="ask-bar">
+      <span>Ask Aura anything…</span>
+      <span class="k">⌘ K</span>
+    </div>
+  </div>
+
+  <!-- RIGHT CHAT PANEL -->
+  <div class="panel glass">
+    <div class="chat-head">
+      <div class="t">Chat with Aura</div>
+      <div class="muted" style="font-size:18px;">⋯</div>
+    </div>
+
+    <div class="bubbles">
+      <div class="b-ai">
+        <div class="mini"></div>
+        <div class="bubble">Good morning, <span class="font-hand accent" style="font-size:17px;">Aditya</span>. You slept 6.2 hours, a bit low. Shall we plan a lighter start today?</div>
+      </div>
+
+      <div class="b-you">
+        <div class="bubble">Yes, show me my top 3 priorities.</div>
+        <div class="av">A</div>
+      </div>
+
+      <div class="b-ai">
+        <div class="mini"></div>
+        <div class="bubble">
+          1. Finish React Dashboard<br>
+          2. Prepare .NET Interview<br>
+          3. DSA Practice (Trees)<br>
+          Shall I block focus time for these?
+        </div>
+      </div>
+
+      <div class="b-you">
+        <div class="bubble">Yes, block 2 hours for deep work.</div>
+        <div class="av">A</div>
+      </div>
+
+      <div class="b-ai">
+        <div class="mini"></div>
+        <div class="bubble">Done. Deep work session scheduled from 7:00 PM. I&rsquo;ll protect your focus. 💙</div>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <span>Type your message…</span>
+      <div class="send">➤</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
