@@ -234,11 +234,15 @@ python -m tests.test_all_systems
 - [ ] Local LLM — data never leaves the machine
 - [ ] SQLCipher — encrypted database
 
-### Phase 5 — Cognitive Drag Engine
+### Phase 5 — Self-Aware Intelligence
+- [ ] Autonomous Metacognition Engine (`core/metacognition.py`) — while Boss works, Symbite re-reads its own reasoning notebook, past responses, and feedback scores. Asks itself what it got wrong, what worked, what patterns exist in its own mistakes. Stores self-improvement notes in a private vault namespace. Shows up sharper the next session with zero human input. No retraining. No engineers. Symbite improves itself.
+- [ ] Cognitive Consolidation Sleep Cycle — nightly memory replay while Boss sleeps. Promotes important vault entries to permanent memory, prunes noise, extracts new patterns, updates bond model. Boss wakes up to a memory report: what Symbite remembered, what it noticed, what it thinks Boss should do today.
+- [ ] Hybrid Intelligence Layer — eliminate LLM calls for all cognitive plumbing. spaCy NER replaces vault_extractor for basic facts. Rule-based heuristics replace FeedbackJudge scoring. Local small model (Phi-3/Llama 3.2) handles classification. Cloud LLM only fires for the actual conversation. Cuts API cost by 80%.
+
+### Phase 6 — Cognitive Drag Engine
 - [ ] `ingestor.py` — background monitor, tracks keypress intervals + window switches
 - [ ] `governor.py` — heuristic processor, outputs Cognitive Drag score [0.0 → 1.0]
 - [ ] `interface.py` — adaptive display, high/low density based on Cd score
-- [ ] Cognitive Consolidation Sleep Cycle — nightly memory replay while Boss sleeps, promotes important vault entries to permanent memory, prunes noise, extracts patterns, delivers a morning memory report on wake
 
 ### Phase 6 — Unbreakable Identity
 - [ ] Zero-Trust Hyper-Personalized Security — continuous behavioral biometrics (vocal cadence, typing rhythm, phrasing patterns). Not a login gate — a living identity score. If the pattern shifts, Symbite silently flags it. One person, always verified.
