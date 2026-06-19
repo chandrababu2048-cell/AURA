@@ -151,59 +151,81 @@ Security note: Never store raw PIN. Hash with bcrypt. Same pattern as password s
 
 ---
 
-### Current State (as of 2026-06-09)
+### Current State (as of 2026-06-18)
 
-#### What was built (2026-05-28 session):
-- **Voice** — changed to Rocko (US English) at 200wpm
-- **brain.py** — cross-session memory fixed. Loads last 20 conversations from DB on startup. Symbite now remembers across sessions.
-- **core/reasoning.py + vault_extractor.py** — JSON parse bug fixed. No more "Reasoning call failed" / "VaultExtractor failed" errors.
-- **Graph Vault** — vault_tags junction table built. save_tags(), get_entries_by_tag(), get_related_entries() with tag weights + auto-pruning. Entries now structurally connected by shared tags.
-- **IBHWSS format** — Chandu's custom blueprint format defined. Use for every feature going forward.
-- **Cognitive Drag Engine architecture** — 4-pillar design documented (ingestor, governor, memory, interface). Added to CLAUDE.md 2026-06-09.
-- 133/133 tests passing.
+#### What was done (2026-06-18 session):
+- **GitHub** — pushed entire codebase for first time. 100 files, all cognitive stack, frontend-v2, tests. Live at github.com/chandrababu2048-cell/AURA
+- **README.MD** — full rewrite. Architecture, cognitive stack table, full 7-phase roadmap.
+- **Roadmap additions:**
+  - Phase 5: Autonomous Metacognition Engine — Symbite re-reads its own reasoning + feedback while Boss works, improves itself with zero human input
+  - Phase 5: Sleep Consolidation Cycle — nightly memory replay, promotes vault entries, prunes noise
+  - Phase 5: Hybrid Intelligence Layer — replace API calls with spaCy NER + local small model, cut costs 80%
+  - Phase 6: Zero-Trust Hyper-Personalized Security — continuous behavioral biometrics
+  - Phase 6: Dynamic Axiom Reconfiguration (context.axi) — fluid self-rewriting rule engine
+- **Memory leak diagnosed** — brain.py line 526 evicts by recency not importance. cognitive_memory.py fixes this.
+- **Algorithm practiced** — Chandu built evict_lowest (Problem 1) and evict_beds (Problem 2). Understands priority eviction fully.
+- **cognitive_memory.py concept reviewed and confirmed understood.**
+- 133/133 tests still passing.
 
 #### THE REAL MISSION:
 Chandu has dementia. Symbite is a Cognitive Prosthetic — not just for him, for everyone.
 "Symbite remembers so you don't have to."
 Full vision saved in: `/Users/chandu/.claude/projects/-Users-chandu/memory/project_vision.md`
 
-#### IMMEDIATE NEXT: LRU Cache Practice → core/cognitive_memory.py
+#### IMMEDIATE NEXT: BUILD core/cognitive_memory.py
 
-**Step 1 — Pending practice problem (Chandu must write this first, NOT DONE YET):**
-```python
-class LRUCache:
-    def __init__(self, capacity: int): pass
-    def get(self, key: str) -> any: pass
-    def put(self, key: str, value: any) -> None: pass
+Concept is fully understood. Algorithm practiced. Skip straight to Chunk 1.
 
-# Test:
-c = LRUCache(3)
-c.put("a", 1); c.put("b", 2); c.put("c", 3)
-c.get("a")        # a moves to front
-c.put("d", 4)     # evicts "b" (least recently used)
-print(c.get("b")) # -1 (evicted)
-print(c.get("a")) # 1 (still alive)
-```
-Use plain dict + list only. No imports.
-
-**Step 2 — After practice → build core/cognitive_memory.py:**
+**The file:**
 ```
 AuraCognitiveMemory
-    __init__(twin, user_id)
-    capacity → property: reads twin C_d score
-               LOW stress  → 30 messages
-               MED stress  → 20 messages
-               HIGH stress → 10 messages
-    add(role, content) → adds to OrderedDict, evicts if over capacity
-    get_history() → list[dict] for Claude API
-```
-Wires into brain.py replacing static conversation_history.
+    __init__(twin: DigitalTwin, user_id: int)
+        self._twin = twin
+        self._user_id = user_id
+        self._messages: list[tuple[float, dict]] = []
 
-**Step 3 — Then (in order):**
-- Thought Capture — voice → vault, surfaced in evening briefing
-- core/operator.py — Life Operator (date night → book restaurant)
-- connectors/reminders.py — actual macOS reminders
-- Cognitive Drag Engine — ingestor.py → governor.py → memory.py → interface.py (Phase 6)
+    capacity (property)
+        reads twin.get_stress_level(user_id)
+        "low"    → 30
+        "medium" → 20
+        "high"   → 10
+
+    _score(message: dict) -> float
+        base = 0.2
+        words = set(content.split())
+        _NAME_WORDS  = {"mom","dad","wife","husband","sister","brother","name","called"}
+        _TIME_WORDS  = {"appointment","meeting","tomorrow","tonight","schedule","remind"}
+        _ACTION_WORDS = {"book","call","buy","cancel","forget","order"}
+        _TRIVIAL     = {"weather","hi","hello","thanks","ok","sure","time"}
+        if words & _NAME_WORDS:   score += 0.3
+        if words & _TIME_WORDS:   score += 0.3
+        if words & _ACTION_WORDS: score += 0.2
+        if words & _TRIVIAL:      score -= 0.2
+        return min(1.0, max(0.0, score))
+
+    add(role: str, content: str) -> None
+        message = {"role": role, "content": content}
+        score = _score(message)
+        if len(_messages) >= capacity:
+            find lowest score index (same loop as evict_beds)
+            pop it
+        _messages.append((score, message))
+
+    get_history() -> list[dict]
+        return [msg for score, msg in self._messages]
+```
+
+**Wire into brain.py (needs explicit permission each session):**
+- Replace `self.conversation_history: list[dict] = []` with `self.cognitive_memory = AuraCognitiveMemory(self.twin, self.user_id)`
+- Replace `.append({"role":..., "content":...})` with `.cognitive_memory.add(role, content)`
+- Replace `messages=self.conversation_history` with `messages=self.cognitive_memory.get_history()`
+- Remove the MAX_HISTORY slice block (lines 526-544) — cognitive_memory handles this
+
+**Step 2 — Then (in order):**
+- Proactive trigger engine — watcher.py acts on patterns/goals/stress
+- macOS notifications — delivery outside the app
+- Thought Capture — voice → vault
+- Metacognition engine — core/metacognition.py
 
 ### Teaching Protocol
 - Use IBHWSS format for every new feature blueprint
